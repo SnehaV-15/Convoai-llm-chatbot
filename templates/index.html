@@ -1,0 +1,385 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConvoAI</title>
+
+    <style>
+        
+.typing-dots {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.typing-dots span {
+    width: 7px;
+    height: 7px;
+    background: #4f46e5;
+    border-radius: 50%;
+    animation: bounce 0.6s infinite alternate;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-6px);
+    }
+}
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            height: 80vh;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #4f46e5;
+            color: white;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            padding: 10px 14px;
+            margin: 10px 0;
+            border-radius: 10px;
+            max-width: 80%;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .user {
+            background: #e0e7ff;
+            margin-left: auto;
+        }
+
+        .bot {
+            background: #f3f4f6;
+            margin-right: auto;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 12px;
+            border-top: 1px solid #ddd;
+            gap: 8px;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #4f46e5;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .new-chat {
+            background: #3730a3;
+            margin-top: 10px;
+        }
+
+        
+@media (max-width: 600px) {
+    body {
+        padding: 0;
+    }
+
+    .chat-container {
+        width: 100%;
+        height: 100vh;
+        max-width: none;
+        border-radius: 0;
+    }
+
+    .chat-header {
+        padding: 14px;
+    }
+
+    .message {
+        max-width: 90%;
+        font-size: 14px;
+    }
+
+    .input-area {
+        padding: 10px;
+    }
+
+    #message-input {
+        min-width: 0;
+    }
+
+    button {
+        padding: 11px;
+    }
+}
+
+/* Larger chatbot window */
+.chat-container {
+    width: 92%;
+    max-width: 750px;
+    height: 88vh;
+    min-height: 550px;
+}
+
+/* Slightly more spacious messages */
+.message {
+    padding: 14px 16px;
+    font-size: 16px;
+    max-width: 85%;
+}
+
+/* Better header spacing */
+.chat-header {
+    padding: 20px;
+}
+
+.chat-header h2 {
+    font-size: 26px;
+}
+
+/* Mobile adjustment */
+@media (max-width: 600px) {
+    .chat-container {
+        width: 100%;
+        height: 100vh;
+        min-height: 0;
+    }
+}
+
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+
+        <div class="chat-header">
+            <h2>ConvoAI</h2>
+            <button class="new-chat" onclick="newChat()">New Chat</button>
+<button class="new-chat" onclick="clearChat()">Clear Chat</button>
+        </div>
+
+        <div id="chat-box">
+    <div class="message bot">
+        Hello! How can I help you today?
+    </div>
+
+    <div id="typing-indicator" class="message bot" style="display: none;">
+    Gemini is typing
+    <span class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+    </span>
+</div>
+</div>
+
+        <div class="input-area">
+            <input
+                type="text"
+                id="message-input"
+                placeholder="Type your message..."
+            >
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+
+    </div>
+
+    <script>
+        
+let conversationId = "chat-" + Date.now();
+
+async function sendMessage() {
+
+    const input = document.getElementById("message-input");
+    const sendButton = document.getElementById("send-button");
+    const typingIndicator = document.getElementById("typing-indicator");
+    
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    addMessage(message, "user");
+    const chatBox = document.getElementById("chat-box");
+
+chatBox.appendChild(typingIndicator);
+typingIndicator.style.display = "block";
+    input.value = "";
+    sendButton.disabled = true;
+    sendButton.textContent = "Sending...";
+
+    // typingIndicator.style.display = "block";
+
+    try {
+        const startTime = Date.now();
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: message,
+                conversation_id: conversationId
+            })
+        });
+        console.log(
+    "Response time:",
+    (Date.now() - startTime) / 1000,
+    "seconds"
+);
+        // Read server response safely
+        const responseText = await response.text();
+
+        let data;
+
+        try {
+            data = JSON.parse(responseText);
+        } catch (error) {
+            throw new Error(
+                "Invalid server response. Please check the Flask terminal."
+            );
+        }
+
+        // Check HTTP status
+        if (!response.ok) {
+            throw new Error(
+                data.error || "Request failed. Please try again."
+            );
+        }
+
+        // Display bot response
+        addMessage(data.bot_response, "bot");
+
+    } catch (error) {
+
+        addMessage("Error: " + error.message, "bot");
+
+    } finally {
+
+        typingIndicator.style.display = "none";
+
+        sendButton.disabled = false;
+        sendButton.textContent = "Send";
+
+        input.focus();
+    }
+}
+
+
+function addMessage(message, sender) {
+
+    const chatBox = document.getElementById("chat-box");
+
+    const messageElement = document.createElement("div");
+
+    messageElement.classList.add("message", sender);
+
+    messageElement.textContent = message;
+
+    chatBox.appendChild(messageElement);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+
+function newChat() {
+    conversationId = "chat-" + Date.now();
+
+    const chatBox = document.getElementById("chat-box");
+    const typingIndicator = document.getElementById("typing-indicator");
+
+    typingIndicator.style.display = "none";
+    chatBox.innerHTML = "";
+
+    addMessage("Hello! How can I help you today?", "bot");
+
+    chatBox.appendChild(typingIndicator);
+}
+
+function clearChat() {
+    const chatBox = document.getElementById("chat-box");
+    const typingIndicator = document.getElementById("typing-indicator");
+
+    typingIndicator.style.display = "none";
+    chatBox.innerHTML = "";
+
+    addMessage("Chat cleared! How can I help you?", "bot");
+
+    chatBox.appendChild(typingIndicator);
+}
+
+
+
+// Send message when Enter is pressed
+document.getElementById("message-input")
+    .addEventListener("keydown", function(event) {
+
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+
+    });
+
+    </script>
+
+</body>
+</html>
