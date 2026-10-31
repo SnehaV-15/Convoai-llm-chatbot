@@ -145,6 +145,13 @@ The application handles:
 
 Developed as part of the **Valentius Kryptix AI / Gen AI Internship**.
 
+<img width="1876" height="902" alt="Screenshot 2026-10-31 204535" src="https://github.com/user-attachments/assets/74bac97b-66e5-440d-8312-557bf6782e8c" />
+<img width="680" height="830" alt="Screenshot 2026-10-31 213531" src="https://github.com/user-attachments/assets/c877a1aa-b554-48f0-bd4a-f09d3afc4cef" />
+<img width="690" height="840" alt="Screenshot 2026-10-31 214132" src="https://github.com/user-attachments/assets/b748181b-f2a6-4aa1-80ca-510fed42905e" />
+<img width="696" height="827" alt="image" src="https://github.com/user-attachments/assets/37754bcd-9ddd-424b-8ac2-b01b85f8d720" />
+
+
+
 ---
 
 *ConvoAI – Simple conversations, powered by AI.*
